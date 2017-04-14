@@ -1,9 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
+	{% load staticfiles %}
 	<title>{% block title %}{% endblock %} || Keystroke</title>
+	<script src="{% static 'assets/jquery-3.2.0.min.js' %}"></script>
+	<!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script> -->
 </head>
 <body>
 	{% block body %}{% endblock %}
+	{% block javascript %}{% endblock %}
 </body>
 </html>
