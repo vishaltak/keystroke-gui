@@ -10,4 +10,5 @@ urlpatterns = [
     url(r'^test/(?P<userId>\d+)/', views.test, name='test'),
     url(r'^start/', views.start, name='start'),
     url(r'^stop/', views.stop, name='stop'),
+    url(r'^pause/', views.pause, name='pause'),
 ]
