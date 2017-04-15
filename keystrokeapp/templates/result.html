@@ -1,0 +1,13 @@
+{% extends 'master.html' %}
+
+{% block title %}
+Result
+{% endblock %}
+
+{% block body %}
+{% if message %}
+	{{ message }}
+{% endif %}
+<a href={% url 'test' userId %}>Try again</a>
+<a href={% url 'test' %}>Try a new user</a>
+{% endblock %}

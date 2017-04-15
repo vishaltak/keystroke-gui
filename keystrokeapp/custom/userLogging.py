@@ -18,14 +18,14 @@ class UserLog():
     def kbpressevent(self, event):
         if self.pause == False:
             # print key info
-            print(event)
+            # print(event)
             values = str(event).split()
             self.rawPress += values[1] + ' ' + values[2] + '\n'
 
     def kbreleaseevent(self, event):
         if self.pause == False:
             # print key info
-            print(event)
+            # print(event)
             values = str(event).split()
             self.rawRelease += values[1] + ' ' + values[2] + '\n'
             

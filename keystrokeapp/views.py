@@ -21,7 +21,7 @@ from .custom.userLogging import UserLog
 data = None
 isLogActive = False
 register = template.Library()
-sampleSize = 2
+sampleSize = 20
 userLogInstance = None
 windowSize = 100
 
@@ -77,7 +77,7 @@ def train(request, userId):
 				global data
 				if bcrypt.checkpw(data['password'].encode('utf-8'), dbPassword.encode('utf-8')):
 					createRecord(genuine=1, userId=userId, username=username)
-					addToCSV(userId=userId, sessionId=data['date'])
+					addToCSV(userId=userId, sessionId=data['date'], stage='train')
 					userSamples = user.samples + 1
 					user.samples = userSamples
 					user.save()
@@ -114,7 +114,76 @@ def train(request, userId):
 		return render(request, 'credentials.html', context)
 
 def test(request, userId):
-	pass
+	if request.method == 'POST':
+		form = UsernamePasswordForm(request.POST)
+		message = None
+		if form.is_valid():
+			username = form.cleaned_data['username']
+			password = form.cleaned_data['password']
+			password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+			userExists = User.objects.filter(username=username).exists()
+			if userExists == True:
+				user = User.objects.get(username=username)
+				dbPassword = user.password
+				if userId is None:
+					userId = user.id
+				global data
+				if bcrypt.checkpw(data['password'].encode('utf-8'), dbPassword.encode('utf-8')):
+					createRecord(genuine=0, userId=userId, username=username)
+					addToCSV(userId=userId, sessionId=data['date'], stage='test')
+					userSamples = user.samples + 1
+					user.samples = userSamples
+					user.save()
+					result = testModel(userId)
+					if result is not None:
+						if result == True:
+							genuineFile = settings.BASE_DIR + '/keystrokeapp' + settings.STATIC_URL \
+								+ 'input/{}/{}/genuine.txt'.format(userId, data['date'])
+							with open(genuineFile, 'w') as file:
+								file.write(str(1))
+							message = 'Welcome!'
+						elif result == False:
+							message = 'Stay away impostor!'
+						# Add the test data to the userData.csv file now that the genuiness has been determined
+						addToCSV(userId=userId, sessionId=data['date'], stage='result')
+						# Check if the model has to be retrained again
+						dataDirectory = settings.BASE_DIR + '/keystrokeapp' + settings.STATIC_URL + 'input/{}/'.format(userId)
+						userData = pd.read_csv(dataDirectory + 'userData.csv', header= 0)
+						global sampleSize
+						if userData.shape[0] % sampleSize == 0:
+							trainModel(userId)
+						# Return the result
+						context = {'message':message, 'userId':userId}
+						return render(request, 'result.html', context)
+					else:
+						message = 'Something went wrong. Please try again.'
+				else:
+					message = 'Wrong password'
+			else:
+				message = 'Wrong Username'
+
+		form = UsernamePasswordForm()
+		if userId is not None:
+			user = User.objects.get(pk=userId)
+			form.initial['username'] = user.username
+		stage = 'test'
+		context = {'form':form, 'stage':stage, 'message':message}
+		return render(request, 'credentials.html', context)
+	else:
+		# Before rendering the form, stop the logging instance if it exists
+		global userLogInstance
+		if userLogInstance is not None:
+			userLogInstance.stopLogging()
+			userLogInstance = None
+			global isLogActive
+			isLogActive = False
+		form = UsernamePasswordForm()
+		if userId is not None:
+			user = User.objects.get(pk=userId)
+			form.initial['username'] = user.username
+		stage = 'test'
+		context = {'form':form, 'stage':stage}
+		return render(request, 'credentials.html', context)
 
 def start(request):
 	global isLogActive
@@ -225,10 +294,15 @@ def createRecord(genuine, userId, username):
 	rrFile.close()
 	totalFile.close()
 
-def addToCSV(userId, sessionId):
+def addToCSV(userId, sessionId, stage):
 	dataDirectory = settings.BASE_DIR + '/keystrokeapp' + settings.STATIC_URL + 'input/{}/'.format(userId)
-	csvFile = open(dataDirectory + 'userData.csv', 'a')
-	if os.path.getsize(dataDirectory + 'userData.csv') == 0:
+	fileLocation = None
+	if stage == 'test':
+		fileLocation = dataDirectory + 'tempData.csv'
+	else:
+		fileLocation = dataDirectory + 'userData.csv'
+	csvFile = open(fileLocation, 'a')
+	if os.path.getsize(fileLocation) == 0:
 		csvFile.write('id,date,genuine,password,release_codes,pp,pr,rp,rr,ppavg,pravg,rpavg,rravg,total\n')
 	dataDirectory = dataDirectory + '{}/'.format(sessionId)
 
@@ -282,8 +356,6 @@ def getHashedMatrix(X):
 	for i in range(X.shape[0]):
 		tempX = X.iloc[i]
 		rc = list(tempX.release_codes.split())
-		abc = tempX.pp.split()
-		print('abc===>{}'.format(abc))
 		pp = list(map(int, tempX.pp.split()))
 		pr = list(map(int, tempX.pr.split()))
 		rp = list(map(int, tempX.rp.split()))
@@ -352,3 +424,26 @@ def trainModel(userId):
 		print('Model has been trained')
 	else:
 		pass
+
+def testModel(userId):
+	dataDirectory = settings.BASE_DIR + '/keystrokeapp' + settings.STATIC_URL + 'input/{}/'.format(userId)
+	userData = pd.read_csv(dataDirectory + 'tempData.csv', header= 0).tail(1)
+	X = userData[['release_codes', 'pp','pr', 'rp', 'rr', 'ppavg', 'pravg', 'rpavg', 'rravg', 'total']]
+	X = getHashedMatrix(X)
+
+	names = [
+	    "Isolation Forest Ensemble", 
+	]
+
+	classifiers = [
+		IsolationForest(random_state=np.random.RandomState(42)),
+	]
+	for name, clf in zip(names, classifiers):
+		# print("\nLoading classifier : {}".format(name))
+		clf = joblib.load(dataDirectory + 'userModel-{}.pkl'.format(userId, name))
+		result = clf.predict(X)
+		if result[0] == 1:
+			return True
+		else:
+			return False
+	return None
