@@ -5,6 +5,22 @@ Home
 {% endblock %}
 
 {% block body %}
-<a href={% url 'enrol' %}>Enrol</a>
-<a href={% url 'test' 0 %}>Test</a>
+<div class="row">
+	<div class="col-md-6">
+		<div class="panel box-v1">
+			<div class="panel-body text-center">
+				<h1><a href="{% url 'enrol' %}">Enrol</a></h1>
+				<hr/>
+			</div>
+		</div>
+	</div>
+	<div class="col-md-6">
+		<div class="panel box-v1">
+			<div class="panel-body text-center">
+				<h1><a href="{% url 'test' %}">Test</a></h1>
+				<hr/>
+			</div>
+		</div>
+	</div>
+</div>
 {% endblock %}

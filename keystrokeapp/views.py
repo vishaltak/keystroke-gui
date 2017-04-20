@@ -21,7 +21,7 @@ from .custom.userLogging import UserLog
 data = None
 isLogActive = False
 register = template.Library()
-sampleSize = 20
+sampleSize = 2
 userLogInstance = None
 windowSize = 100
 
@@ -29,7 +29,7 @@ def index(request):
 	return HttpResponse("Welcome to keystroke project!")
 
 def home(request):
-	context = {}
+	context = {'stage':'home'}
 	return render(request, 'home.html', context)
 
 def enrol(request):
@@ -110,7 +110,7 @@ def train(request, userId):
 			user = User.objects.get(pk=userId)
 			form.initial['username'] = user.username
 		stage = 'train'
-		context = {'form':form, 'stage':stage}
+		context = {'form':form, 'stage':stage, 'message':None}
 		return render(request, 'credentials.html', context)
 
 def test(request, userId):
@@ -153,14 +153,14 @@ def test(request, userId):
 						if userData.shape[0] % sampleSize == 0:
 							trainModel(userId)
 						# Return the result
-						context = {'message':message, 'userId':userId}
+						context = {'message':message, 'userId':userId, 'stage':'result'}
 						return render(request, 'result.html', context)
 					else:
 						message = 'Something went wrong. Please try again.'
 				else:
 					message = 'Wrong password'
 			else:
-				message = 'Wrong Username'
+				message = 'Username does not exist'
 
 		form = UsernamePasswordForm()
 		if userId is not None:
@@ -182,7 +182,7 @@ def test(request, userId):
 			user = User.objects.get(pk=userId)
 			form.initial['username'] = user.username
 		stage = 'test'
-		context = {'form':form, 'stage':stage}
+		context = {'form':form, 'stage':stage, 'message':None}
 		return render(request, 'credentials.html', context)
 
 def start(request):

@@ -1,13 +1,79 @@
 <!DOCTYPE html>
 <html>
 <head>
-	{% load staticfiles %}
 	<title>{% block title %}{% endblock %} || Keystroke</title>
-	<script src="{% static 'assets/jquery-3.2.0.min.js' %}"></script>
-	<!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script> -->
+	{% load staticfiles %}
+
+	<!-- start: CSS -->
+	<link rel="stylesheet" type="text/css" href="{% static 'assets/css/bootstrap.min.css' %}"/>
+	<link rel="stylesheet" type="text/css" href="{% static 'assets/css/style.css' %}"/>
+	<link rel="stylesheet" type="text/css" href="{% static 'assets/css/plugins/font-awesome.min.css' %}"/>
+	<!-- end: CSS -->
+
+	<link rel="shortcut icon" href="{% static 'assets/img/logo.png' %}">
 </head>
-<body>
-	{% block body %}{% endblock %}
-	{% block javascript %}{% endblock %}
-</body>
+<body id="mimin" class="dashboard">
+	<!-- start: Header -->
+	<nav class="navbar navbar-default header navbar-fixed-top">
+		<div class="col-md-12 nav-wrapper">
+			<div class="navbar-header" style="width:100%;">
+				<a href="{% url 'home' %}" class="navbar-brand"> 
+					<b>Keystroke</b>
+				</a>
+			</div>
+		</div>
+	</nav>
+	<!-- end: Header -->
+
+	<div class="container-fluid mimin-wrapper">
+
+		<!-- start:Left Menu -->
+		<div id="left-menu">
+			<div class="sub-left-menu scroll">
+				<ul class="nav nav-list">
+					<li><div class="left-bg"></div></li>
+					<li class="ripple"><a href="{% url 'enrol' %}"><span class="fa fa-calendar-o"></span>Enrol</a></li>
+					<li class="ripple"><a href="{% url 'test' %}"><span class="fa fa-calendar-o"></span>Test</a></li>
+				</ul>
+			</div>
+		</div>
+		<!-- end: Left Menu -->
+
+		<!-- start: content -->
+		<div id="content">
+			<div class="panel">
+				<div class="panel-body">
+					<div class="col-md-6 col-sm-12">
+						<h3 class="animated fadeInLeft">
+							{% if stage %}
+								{% if stage == 'enrol' %}
+									{{'Enrolment'}}
+								{% elif stage == 'train' %}
+									{{'Training'}}
+								{% elif stage == 'test' %}
+									{{'Testing'}}
+								{% elif stage == 'home' %}
+									{{'Home'}}
+								{% elif stage == 'result' %}
+									{{'Result'}}
+								{% endif %}
+							{% endif %}
+						</h3>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-12" style="padding:20px;">
+				{% block body %}{% endblock %}
+			</div>
+		</div>
+		<!-- end: content -->
+		
+	</div>
+
+<!-- start: Javascript -->
+<script src="{% static 'assets/js/bootstrap.min.js' %}"></script>
+<script src="{% static 'assets/js/jquery-3.2.0.min.js' %}"></script>
+{% block javascript %}{% endblock %}
+<!-- end: Javascript -->
+
 </html>
