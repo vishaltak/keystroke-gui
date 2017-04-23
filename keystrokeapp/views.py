@@ -1,4 +1,5 @@
 import bcrypt
+import django.contrib.auth.password_validation as validators
 import django_rq
 import numpy as np
 import os
@@ -8,6 +9,7 @@ import sys
 
 from django import template
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from sklearn.feature_extraction import FeatureHasher
@@ -21,7 +23,7 @@ from .custom.userLogging import UserLog
 data = None
 isLogActive = False
 register = template.Library()
-sampleSize = 2
+sampleSize = 20
 userLogInstance = None
 windowSize = 100
 
@@ -38,6 +40,14 @@ def enrol(request):
 		if form.is_valid():
 			username = form.cleaned_data['username']
 			password = form.cleaned_data['password']
+			try:
+				validators.validate_password(password=password)
+			except ValidationError as e:
+				message = '  and '.join(list(e.messages))
+				form = UsernamePasswordForm()
+				stage = 'enrol'
+				context = {'form':form, 'stage':stage, 'message':message}
+				return render(request, 'credentials.html', context)
 			password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 			userExists = User.objects.filter(username=username).exists()
 			if userExists == True:

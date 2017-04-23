@@ -7,7 +7,6 @@ class UserLog():
     def __init__(self):
         self.date = time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime())
         self.hookman = None
-        self.password = None
         self.password = ''
         self.pause = False
         self.rawPress = ''

@@ -7,7 +7,7 @@ Result
 {% block body %}
 {% if message %}
 <div class="row">
-	<div class="col-md-6">
+	<div class="col-md-12">
 		<div class="panel box-v1">
 			<div class="panel-body text-center">
 				<h1>{{ message }}</h1>
@@ -19,7 +19,7 @@ Result
 {% endif %}
 
 <div class="row">
-	<div class="col-md-3">
+	<div class="col-md-6">
 		<div class="panel box-v1">
 			<div class="panel-body text-center">
 				<h3><a href={% url 'test' userId %}>Try again</a></h3>
@@ -27,7 +27,7 @@ Result
 			</div>
 		</div>
 	</div>
-	<div class="col-md-3">
+	<div class="col-md-6">
 		<div class="panel box-v1">
 			<div class="panel-body text-center">
 				<h3><a href={% url 'test' %}>Try a new user</a></h3>
